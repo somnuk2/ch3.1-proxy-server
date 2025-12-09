@@ -4,6 +4,7 @@
       Task List (Express + Prisma + Supabase)
     </div>
 
+    <!-- ปุ่ม reload -->
     <div class="q-mb-md row items-center q-gutter-sm">
       <q-btn
         color="primary"
@@ -16,11 +17,13 @@
       </span>
     </div>
 
+    <!-- แสดงสถานะ -->
     <q-spinner v-if="loading" color="primary" size="2em" />
 
+    <!-- ถ้าไม่โหลดแล้ว -->
     <div v-else>
       <div v-if="tasks.length === 0" class="text-grey">
-        ยังไม่มีงานในระบบ ลองสร้างด้วย curl / Postman ก่อน
+        ยังไม่มีงานในระบบ ลองสร้างด้วย curl / Postman / ฟอร์มเพิ่ม task
       </div>
 
       <q-list v-else bordered separator>
@@ -41,30 +44,31 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import axios from 'axios';
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
 
-// อ่านค่าจาก quasar.config → env.API_URL
-const API_URL = process.env.API_URL || 'http://localhost:3000';
+// อ่านจาก quasar.config → env.API_URL
+const API_URL = process.env.API_URL || 'http://localhost:3000'
 
-const tasks = ref([]);
-const loading = ref(false);
-const errorMessage = ref('');
+const tasks = ref([])
+const loading = ref(false)
+const errorMessage = ref('')
 
 const fetchTasks = async () => {
-  loading.value = true;
-  errorMessage.value = '';
+  loading.value = true
+  errorMessage.value = ''
 
   try {
-    const res = await axios.get(API_URL + '/api/tasks');
-    tasks.value = res.data.data; // backend ส่ง { data: [...] }
+    const res = await axios.get(API_URL + '/api/tasks')
+    // backend ส่ง { data: [...] }
+    tasks.value = res.data.data
   } catch (err) {
-    console.error('API /api/tasks error:', err);
-    errorMessage.value = 'โหลดงานจากฐานข้อมูลไม่สำเร็จ';
+    console.error('API /api/tasks error:', err)
+    errorMessage.value = 'โหลดงานจากฐานข้อมูลไม่สำเร็จ'
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
-onMounted(fetchTasks);
+onMounted(fetchTasks)
 </script>
