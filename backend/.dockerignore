@@ -6,3 +6,5 @@ logs
 .gitignore
 Dockerfile
 README.md
+prisma.config.ts
+prisma.config.ts.bak

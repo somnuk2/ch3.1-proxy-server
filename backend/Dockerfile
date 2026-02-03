@@ -1,31 +1,36 @@
-# Stage 1: Build dependencies
+# Stage 1: Build
 FROM node:20-alpine AS builder
-
 WORKDIR /app
+COPY package*.json ./
+# Install ALL dependencies (including devDependencies for building)
+RUN npm ci
+COPY . .
+# Generate Prisma Client
+RUN DATABASE_URL="postgresql://dummy:5432/mydb" npx prisma generate
+# Build TypeScript
+RUN npm run build
+
+# Stage 2: Production
+FROM node:20-alpine
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Create logs directory
+RUN mkdir -p /app/logs && chown -R node:node /app
+
+USER node
 
 COPY package*.json ./
 # Install only production dependencies
 RUN npm ci --only=production
 
-# Stage 2: Production
-FROM node:20-alpine
-
-WORKDIR /app
-
-# Set ownership of the working directory to the non-root user 'node'
-RUN chown -R node:node /app
-
-# Switch to non-root user
-USER node
-
-# Copy dependencies from builder
-COPY --from=builder --chown=node:node /app/node_modules ./node_modules
-
-# Copy application code
-COPY --chown=node:node . .
-
-# Ensure logs directory exists (optional, as code creates it, but good practice)
-# Since /app is owned by node, the app can create it. 
+# Copy built application from builder stage
+COPY --from=builder --chown=node:node /app/dist ./dist
+# Copy prisma schema if needed for runtime reference
+COPY --from=builder --chown=node:node /app/prisma ./prisma
+# Copy generated Prisma Client
+COPY --from=builder --chown=node:node /app/node_modules/.prisma ./node_modules/.prisma
 
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
@@ -33,4 +38,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+CMD ["node", "dist/server.js"]
