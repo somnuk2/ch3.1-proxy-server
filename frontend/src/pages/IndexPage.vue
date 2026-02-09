@@ -42,10 +42,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
-
-// อ่านค่าจาก quasar.config → env.API_URL
-const API_URL = process.env.API_URL === undefined ? 'http://localhost:3000' : process.env.API_URL;
+import { api } from 'boot/axios';
 
 const tasks = ref([]);
 const loading = ref(false);
@@ -56,7 +53,7 @@ const fetchTasks = async () => {
   errorMessage.value = '';
 
   try {
-    const res = await axios.get(API_URL + '/api/tasks');
+    const res = await api.get('/tasks');
     tasks.value = res.data.data; // backend ส่ง { data: [...] }
   } catch (err) {
     console.error('API /api/tasks error:', err);
