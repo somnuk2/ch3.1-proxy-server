@@ -12,7 +12,8 @@
         @click="fetchTasks"
       />
       <span v-if="errorMessage" class="text-negative">
-        {{ errorMessage }}
+        {{ errorMessage }} <br>
+        <small v-if="loadingErrorUrl" class="text-grey">Target: {{ loadingErrorUrl }}</small>
       </span>
     </div>
 
@@ -47,6 +48,7 @@ import { api } from 'boot/axios';
 const tasks = ref([]);
 const loading = ref(false);
 const errorMessage = ref('');
+const loadingErrorUrl = ref('');
 
 const fetchTasks = async () => {
   loading.value = true;
@@ -56,8 +58,10 @@ const fetchTasks = async () => {
     const res = await api.get('/tasks');
     tasks.value = res.data.data; // backend ส่ง { data: [...] }
   } catch (err) {
-    console.error('API /api/tasks error:', err);
-    errorMessage.value = 'โหลดงานจากฐานข้อมูลไม่สำเร็จ';
+    console.error('API Error:', err);
+    const status = err.response ? err.response.status : 'Network Error';
+    errorMessage.value = `โหลดงานไม่สำเร็จ (${status})`;
+    loadingErrorUrl.value = api.defaults.baseURL + '/tasks';
   } finally {
     loading.value = false;
   }
